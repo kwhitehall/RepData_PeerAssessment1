@@ -1,25 +1,151 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Reproducible Research Assignment 1"
+author: "Kim Whitehall"
+date: "June 7, 2015"
+output: html_document
 ---
 
+This is the R Markdown document for the Coursera Reproducible Research Assignment. The assignment makes use of dataset from from an anonymous individual's personal activity monitoring device for the months of October and November 2012. The data can be [download from the course website here](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip).
+This report provides a simple analysis using the data. 
 
-## Loading and preprocessing the data
+## More about the data
+The data is stored in a csv file. 
+There are 17,568 observations (rows) in this dataset.
+There are 3 variables (columns) collected for the device in this dataset. These are:  
+* **steps**: the number of steps taken in a 5-minute interval. Missing values are coded as NA  
+* **date**: the data in the format YYYY-MM-DD when the measurement was taken  
+* **interval**: an identifer for the 5-minute interval when the measurement was taken  
 
+Let's begin by loading the data
+```{r, echo=TRUE}
+activityData <- read.csv('activity.csv', stringsAsFactors=FALSE)
+str(activityData)
+```
 
+The dimensions of this dataset are `r dim(activityData)[1]` rows and `r dim(activityData)[2]` columns. The colnames are `r colnames(activityData)`.
 
-## What is mean total number of steps taken per day?
+Take a quick look at the file
+```{r, echo=TRUE}
+head(activityData, 10)
+```
 
+## The mean number of steps taken per day (ignoring the missing value in the dataset)
+The total number of steps taken per a day 
+```{r, echo=TRUE}
+dailySteps <- aggregate(cbind(activityData$steps) ~ activityData$date, activityData, sum)
+# rename second column to steps 
+colnames(dailySteps)[2] = 'steps'
+```
+Draw a histogram of the daily mean steps distribution. The mean value is given as a red line. 
+```{r, echo=TRUE}
+hist(dailySteps$steps,10, main="Total steps per day", xlab="Steps", ylab="Frequency", ylim=c(0,25), col="blue")
+abline(v=mean(dailySteps$steps),col="red")
+```
 
+The mean of the total number of steps taken per day is `r round(summary(dailySteps$steps)[4],2)` and the median is `r round(summary(dailySteps$steps)[3],2)`.
 
-## What is the average daily activity pattern?
-
-
+## The average daily activity pattern (ignoring the missing value in the dataset)
+Group the data to find the average number of steps taken in a 5-minute interval per a day
+```{r, echo=TRUE}
+dailyTimeSeries <- aggregate(cbind(activityData$steps) ~ activityData$interval, activityData, mean)
+colnames(dailyTimeSeries)[2] = 'steps'
+colnames(dailyTimeSeries)[1] = 'interval'
+```
+Make a timeseries plot of the 5-minute interval and the average number of steps taken daily
+```{r, echo=TRUE}
+plot(x=dailyTimeSeries$interval, y=dailyTimeSeries$steps, type="l",xlab="5-minute interval", ylab="average num of steps", main="Time series of daily 5-minute intervals and average number of steps", col="red")
+```
+Take a look at the first 10 time intervals in the average 5-minute interval
+```{r, echo=TRUE}
+head(dailyTimeSeries,10)
+```
+The average 5-minute interval with the maximum number of steps daily is `r rbind(dailyTimeSeries[dailyTimeSeries$steps==max(dailyTimeSeries$steps),1])`. This was found executing the code below.
+```{r echo=TRUE}
+rbind(dailyTimeSeries[dailyTimeSeries$steps==max(dailyTimeSeries$steps),1])
+```
 
 ## Imputing missing values
+As the missing values in the dataset may introduce biases in some calculations, in this section the presence of missing values will be acknowledged in calculations. 
 
+The number of incomplete rows of observations is 
+```{r, echo=TRUE}
+dim(activityData)[1] - sum(complete.cases(activityData))
+```
 
+Closer investigation to determine the columns where data is missing data can be done as below. 
+For the variable date:
+```{r, echo=TRUE}
+dim(activityData)[1] - sum(complete.cases(activityData$date))
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+For the variable interval:
+```{r, echo=TRUE}
+dim(activityData)[1] - sum(complete.cases(activityData$interval))
+```
+
+For the variable steps:
+```{r, echo=TRUE}
+dim(activityData)[1] - sum(complete.cases(activityData$steps))
+```
+This is `r round(((dim(activityData)[1] - sum(complete.cases(activityData$steps)))/dim(activityData)[1])*100.0,2)`% of the data, which is quite significant. The only missing values in the table are for the variable steps. These will be filled in with the mean number of steps for a 5-minute interval.
+```{r, echo=TRUE}
+newActivityData <- activityData
+for (i in 1:length(newActivityData$steps)) {
+    if (is.na(newActivityData[i,1]))
+        newActivityData[i,1] <- dailyTimeSeries[dailyTimeSeries$interval==newActivityData[i,3],2];
+}
+```
+Take a look at the first 10 observations of the new dataset
+```{r, echo=TRUE}
+head(newActivityData,10)
+```
+The dimensions of the new dataset are `r dim(newActivityData)[1]` rows and `r dim(newActivityData)[2]` columns. The colnames are `r colnames(newActivityData)`. There are `r dim(newActivityData)[1] - sum(complete.cases(newActivityData))` missing values (NA) in this new dataset. 
+
+A histogram of the total daily steps of the imputed data. The mean value is given as a red line. 
+```{r, echo=TRUE}
+newDailySteps <- aggregate(cbind(newActivityData$steps) ~ newActivityData$date, newActivityData, sum)
+# rename second column to steps 
+colnames(newDailySteps)[2] = 'steps'
+hist(newDailySteps$steps,10, main="Total steps per day", xlab="Steps", ylab="Frequency", ylim=c(0,25), col="blue")
+abline(v=mean(newDailySteps$steps),col="red")
+```
+The mean of the total number of steps taken per day is 
+```{r,echo=TRUE}
+round(summary(newDailySteps$steps)[4],2)
+``` 
+and the median is 
+```{r,echo=TRUE}
+round(summary(newDailySteps$steps)[3],2)
+```
+The values for the mean and median are for the imputed data are similarly distributed. More specifically, the change in the mean is given as
+```{r, echo=TRUE}
+round(summary(dailySteps$steps)[4],2) - round(summary(newDailySteps$steps)[4],2)
+```
+and the median as
+```{r, echo=TRUE}
+round(summary(dailySteps$steps)[3],2) - round(summary(newDailySteps$steps)[3],2)
+```
+indicating an increase in the median value for the imputed dataset. 
+
+## Weekday and weekend differences
+First append a new column indicating the type of day of the week - weekday or weekend - onto the imputed dataset. 
+
+```{r, echo=TRUE}
+dayOfWeek <- function(date) {
+    if (weekdays(as.Date(date)) %in% c("Saturday", "Sunday")) {
+        "weekend"
+    } else {
+        "weekday"
+    }
+}
+newActivityData$daytype <- as.factor(sapply(newActivityData$date, dayOfWeek))
+head(newActivityData)
+```
+Create a timeseries plot of the 5-minute interval and the average number steps taken averaged on weekdays and weekends.
+```{r, echo=TRUE}
+library(plyr)
+library(lattice)
+stepsTypeOfDay <- ddply (newActivityData,.(interval, daytype), summarize, 
+              stepMeanInInterval = mean(steps, na.rm=TRUE))
+xyplot(stepMeanInInterval ~ interval | daytype, data=stepsTypeOfDay, type='l', layout=c(1,2))
+```
