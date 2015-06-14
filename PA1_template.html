@@ -134,7 +134,7 @@ colnames(dailyTimeSeries)[1] = 'interval'</code></pre>
 </div>
 <div id="imputing-missing-values" class="section level2">
 <h2>Imputing missing values</h2>
-<p>As the missing values in the dataset may introduce biases in some calculations, in this section the presence of missing values will be acknowledged in calculations.</p>
+<p>As the missing values in the dataset may introduce biases in some calculations, in this section the presence of missing values will be acknowledged in calculations. The missing data will be filled in using the average of the available data for a given 5-minute time interval.</p>
 <p>The number of incomplete rows of observations is</p>
 <pre class="r"><code>dim(activityData)[1] - sum(complete.cases(activityData))</code></pre>
 <pre><code>## [1] 2304</code></pre>
@@ -147,7 +147,7 @@ colnames(dailyTimeSeries)[1] = 'interval'</code></pre>
 <p>For the variable steps:</p>
 <pre class="r"><code>dim(activityData)[1] - sum(complete.cases(activityData$steps))</code></pre>
 <pre><code>## [1] 2304</code></pre>
-<p>This is 13.11% of the data, which is quite significant. The only missing values in the table are for the variable steps. These will be filled in with the mean number of steps for a 5-minute interval.</p>
+<p>This is 13.11% of the data, which is quite significant. The only missing values in the table are for the variable steps. These will be filled in with the mean number of steps for the specific 5-minute interval of the other days where that data is avaiable.</p>
 <pre class="r"><code>newActivityData &lt;- activityData
 for (i in 1:length(newActivityData$steps)) {
     if (is.na(newActivityData[i,1]))

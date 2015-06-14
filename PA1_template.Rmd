@@ -66,7 +66,7 @@ rbind(dailyTimeSeries[dailyTimeSeries$steps==max(dailyTimeSeries$steps),1])
 ```
 
 ## Imputing missing values
-As the missing values in the dataset may introduce biases in some calculations, in this section the presence of missing values will be acknowledged in calculations. 
+As the missing values in the dataset may introduce biases in some calculations, in this section the presence of missing values will be acknowledged in calculations. The missing data will be filled in using the average of the available data for a given 5-minute time interval.
 
 The number of incomplete rows of observations is 
 ```{r, echo=TRUE}
@@ -88,7 +88,8 @@ For the variable steps:
 ```{r, echo=TRUE}
 dim(activityData)[1] - sum(complete.cases(activityData$steps))
 ```
-This is `r round(((dim(activityData)[1] - sum(complete.cases(activityData$steps)))/dim(activityData)[1])*100.0,2)`% of the data, which is quite significant. The only missing values in the table are for the variable steps. These will be filled in with the mean number of steps for a 5-minute interval.
+This is `r round(((dim(activityData)[1] - sum(complete.cases(activityData$steps)))/dim(activityData)[1])*100.0,2)`% of the data, which is quite significant. The only missing values in the table are for the variable steps. These will be filled in with the mean number of steps for the specific 5-minute interval of the other days where that data is avaiable.
+
 ```{r, echo=TRUE}
 newActivityData <- activityData
 for (i in 1:length(newActivityData$steps)) {
