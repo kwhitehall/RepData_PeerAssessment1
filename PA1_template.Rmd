@@ -55,6 +55,7 @@ Make a timeseries plot of the 5-minute interval and the average number of steps 
 ```{r, echo=TRUE}
 plot(x=dailyTimeSeries$interval, y=dailyTimeSeries$steps, type="l",xlab="5-minute interval", ylab="average num of steps", main="Time series of daily 5-minute intervals and average number of steps", col="red")
 ```
+
 Take a look at the first 10 time intervals in the average 5-minute interval
 ```{r, echo=TRUE}
 head(dailyTimeSeries,10)
